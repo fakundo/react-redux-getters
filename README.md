@@ -4,5 +4,5 @@
 
 ### Installation
 ```
-yarn install redux-getters
+yarn add redux-getters
 ```
