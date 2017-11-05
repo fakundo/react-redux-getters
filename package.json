@@ -10,7 +10,7 @@
     "dev": "webpack-dev-server --progress --open",
     "lint": "eslint src && eslint examples",
     "build": "rimraf lib && babel src -d lib",
-    "prepublish": "yarn run lint && yarn run build"
+    "prepublishOnly": "yarn run lint && yarn run build"
   },
   "keywords": [
     "redux",
