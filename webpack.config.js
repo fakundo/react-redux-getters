@@ -1,8 +1,8 @@
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const host = 'localhost';
-const port = 3000;
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+const host = 'localhost'
+const port = 3000
 
 module.exports = {
   entry: [
@@ -26,7 +26,6 @@ module.exports = {
   devServer: {
     host,
     port,
-    historyApiFallback: true,
     stats: 'minimal'
-  },
-};
+  }
+}
