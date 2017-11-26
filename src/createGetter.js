@@ -1,4 +1,3 @@
-import isEmpty from 'lodash/isEmpty'
 import { PENDING_STUB, FAILURE_STUB } from './stubs'
 
 export default options => (dispatch, getState, ...args) => {
@@ -9,7 +8,7 @@ export default options => (dispatch, getState, ...args) => {
     getSuccessAction,
     getFailureAction,
     getUpdatingAction,
-    shouldFetch = stateData => isEmpty(stateData)
+    shouldFetch = stateData => stateData === undefined
   } = options
 
   const stateData = stateSelector(getState())

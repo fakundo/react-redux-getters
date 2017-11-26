@@ -75,16 +75,22 @@ export default class AllSubjects extends Component {
 
 ### API
 
-- createGetter({
+```javascript
+createGetter({
   stateSelector,
   asyncFetcher,
   getPendingAction,
   getSuccessAction,
   getFailureAction,
   getUpdatingAction,
-  shouldFetch = stateData => isEmpty(stateData)
+  shouldFetch = stateData => undefined
 } = {})
-- createGettersReducer(getStore, getters)
-- isPendingStub(data)
-- isFailureStub(data)
-- isSuccededData(data)
+
+createGettersReducer(getStore, getters)
+
+isPendingStub(data)
+
+isFailureStub(data)
+
+isSuccededData(data)
+```
