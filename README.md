@@ -4,7 +4,7 @@
 
 This library provides an additional layer of getters between the store and components. The getter returns data from the store if they are there, otherwise it returns stub and invokes fetch action.
 
-Getters themselves are stored in the state of the store for easy access to them. For example, to use in selectors.
+Getters themselves are stored in the state of the store for easy access to them. For example, for using within selectors.
 
 ### Installation
 ```
@@ -13,7 +13,7 @@ yarn add redux-getters
 
 ### Usage
 
-#### Creating getters
+#### Creating a getter
 
 ```javascript
 import { updateSubjects, fetchSubjects } from '../actions/subjects'
@@ -82,8 +82,7 @@ createGetter({
   getPendingAction,
   getSuccessAction,
   getFailureAction,
-  getUpdatingAction,
-  shouldFetch = stateData => undefined
+  getUpdatingAction
 } = {})
 
 createGettersReducer(getStore, getters)

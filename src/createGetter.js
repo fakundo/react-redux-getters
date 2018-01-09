@@ -7,13 +7,12 @@ export default options => (dispatch, getState, ...args) => {
     getPendingAction,
     getSuccessAction,
     getFailureAction,
-    getUpdatingAction,
-    shouldFetch = stateData => stateData === undefined
+    getUpdatingAction
   } = options
 
   const stateData = stateSelector(getState())
 
-  if (shouldFetch(stateData)) {
+  if (stateData === undefined) {
     dispatch((getPendingAction || getUpdatingAction)(PENDING_STUB))
 
     setImmediate(async () => {
