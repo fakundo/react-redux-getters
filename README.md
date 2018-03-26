@@ -1,10 +1,12 @@
-### Fetch data and fill store automatically
+# README update required!
 
-[![npm](https://img.shields.io/npm/v/redux-getters.svg?maxAge=2592000)](https://www.npmjs.com/package/redux-getters)
+### Fetch data and fill store automatically
 
 This library provides an additional layer of getters between the store and components. The getter returns data from the store if they are there, otherwise it returns stub and invokes fetch action.
 
 Getters themselves are stored in the state of the store for easy access to them. For example, for using within selectors.
+
+[![npm](https://img.shields.io/npm/v/redux-getters.svg?maxAge=2592000)](https://www.npmjs.com/package/redux-getters)
 
 ### Installation
 ```

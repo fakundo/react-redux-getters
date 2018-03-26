@@ -1,18 +1,23 @@
+import { createSelector } from 'reselect'
 import pickBy from 'lodash/pickBy'
 import includes from 'lodash/includes'
-import { createSelector } from 'reselect'
-import { isSuccededData } from '../../src'
+import { createGetter, composeGetters } from '../../src'
+import { updateSubjects, fetchSubjects } from '../actions/subjects'
 
 const isHumanitarianSubject = subject => includes(['Philosophy', 'English'], subject.name)
 
-export const getAllSubjects = state => state.getters.allSubjects()
+export const getAllSubjects = createGetter({
+  stateSelector: state => state.subjects.collection,
+  asyncFetcher: dispatch => dispatch(fetchSubjects()),
+  onSuccess: (dispatch, props, data) => dispatch(updateSubjects(data)),
+})
 
 export const getHumanitarianSubjects = createSelector(
   getAllSubjects,
-  (allSubjects) => {
-    if (isSuccededData(allSubjects)) {
-      return pickBy(allSubjects, isHumanitarianSubject)
-    }
-    return allSubjects
-  }
+  allSubjectsGetter =>
+    composeGetters(
+      allSubjectsGetter,
+      allSubjects => pickBy(allSubjects, isHumanitarianSubject)
+    )
 )
+

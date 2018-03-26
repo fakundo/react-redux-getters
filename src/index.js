@@ -1,3 +1,4 @@
 export createGetter from './createGetter'
-export createReducer from './createReducer'
-export * from './stubs'
+export connectGetters from './connectGetters'
+export composeGetters from './composeGetters'
+export createGettersStatusReducer from './createStatusReducer'

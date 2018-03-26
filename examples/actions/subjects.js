@@ -7,12 +7,19 @@ export const fetchSubjects = () => () =>
         3: { id: 3, name: 'English' },
         4: { id: 4, name: 'Philosophy' }
       })
-    }, (Math.random() * 2000) + 1000)
+    }, Math.random() * 500)
   }))
 
 export const UPDATE_SUBJECTS = 'UPDATE_SUBJECTS'
 
 export const updateSubjects = subjects => ({
   type: UPDATE_SUBJECTS,
+  subjects
+})
+
+export const UPDATE_SUBJECTS_NEW = 'UPDATE_SUBJECTS_NEW'
+
+export const updateSubjectsNew = subjects => ({
+  type: UPDATE_SUBJECTS_NEW,
   subjects
 })

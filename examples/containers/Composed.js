@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
 import { connectGetters } from '../../src'
-import { getAllSubjects } from '../selectors/subjects'
+import { getSubjectsAndTeachers } from '../selectors/composed'
 
 @connectGetters(state => ({
-  allSubjects: getAllSubjects(state)
+  subjectAndTeachers: getSubjectsAndTeachers(state),
 }))
-export default class AllSubjects extends Component {
+export default class Composed extends Component {
   render() {
     return (<pre>{ JSON.stringify(this.props, null, ' ') }</pre>)
   }
