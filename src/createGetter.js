@@ -12,7 +12,7 @@ export default ({
   return (state, props = {}) => {
     const key = `${index}${serializeProps(props)}`
     const data = stateSelector(state)
-    const statusState = state.getterStatuses[key]
+    const statusState = state.getters[key]
     const status = statusState && statusState.status
     const error = statusState && statusState.error
 

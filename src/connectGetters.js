@@ -5,10 +5,10 @@ import size from 'lodash/size'
 import mapValues from 'lodash/mapValues'
 import isShallowEqual from 'shallowequal'
 import { PENDING, SUCCEDED, FAILED } from './statuses'
-import { updateGetterStatus } from './actions'
+import { setStatusPending, setStatusSucceded, setStatusFailed } from './actions'
 import composeGetters, { GetterComposition } from './composeGetters'
 
-const processGetter = (dispatch, getter) => {
+const processGetter = (getter, dispatch, state) => {
   const {
     key,
     data,
@@ -22,21 +22,25 @@ const processGetter = (dispatch, getter) => {
   } = getter
 
   // Should we fetch data
-  if (!status && shouldFetch(data)) {
+  if (!status && shouldFetch(data, state)) {
+    // Update getter status
+    dispatch(setStatusPending(key))
     // Fetch data
-    asyncFetcher(dispatch, props)
+    asyncFetcher(dispatch, state, props)
       // Fetch succeded
       .then((fetchedData) => {
-        onSuccess(dispatch, props, fetchedData)
-        dispatch(updateGetterStatus(key, SUCCEDED))
+        // Update getter status
+        dispatch(setStatusSucceded(key, (actualState) => {
+          onSuccess(dispatch, actualState, props, fetchedData)
+        }))
       })
       // Fetch failed
       .catch((fetchError) => {
-        onFailure(dispatch, props, fetchError)
-        dispatch(updateGetterStatus(key, FAILED, fetchError))
+        // Update getter status
+        dispatch(setStatusFailed(key, fetchError, (actualState) => {
+          onFailure(dispatch, actualState, props, fetchError)
+        }))
       })
-    // Update getter status
-    dispatch(updateGetterStatus(key, PENDING))
   }
 
   // Specify statuses
@@ -54,14 +58,14 @@ const processGetter = (dispatch, getter) => {
   }
 }
 
-const processGetterComposition = (dispatch, composition) => {
+const processGetterComposition = (composition, dispatch, state) => {
   const { getters, composeData } = composition
 
   // Process each getter in composition
   const results = getters.map(getter => (
     getter instanceof GetterComposition ?
-      processGetterComposition(dispatch, getter) :
-      processGetter(dispatch, getter)
+      processGetterComposition(getter, dispatch, state) :
+      processGetter(getter, dispatch, state)
   ))
 
   // Check if some of getters is pending
@@ -83,11 +87,11 @@ const processGetterComposition = (dispatch, composition) => {
   }
 }
 
-const processMapGettersToProps = (dispatch, mapGettersToProps, state, ownProps) => {
+const processMapGettersToProps = (mapGettersToProps, dispatch, state, ownProps) => {
   const getters = mapGettersToProps(state, ownProps)
   return mapValues(
     getters,
-    getter => processGetterComposition(dispatch, composeGetters(getter, data => data))
+    getter => processGetterComposition(composeGetters(getter, data => data), dispatch, state)
   )
 }
 
@@ -107,8 +111,8 @@ const createPureSelectorFactory = mapGettersToProps => (dispatch) => {
 
   return (nextState, nextOwnProps) => {
     const nextResult = processMapGettersToProps(
-      dispatch,
       mapGettersToProps,
+      dispatch,
       nextState,
       nextOwnProps
     )
@@ -129,8 +133,8 @@ const createPureSelectorFactory = mapGettersToProps => (dispatch) => {
 const createImpureSelectorFactory = mapGettersToProps => (dispatch) => {
   return (nextState, nextOwnProps) => {
     return processMapGettersToProps(
-      dispatch,
       mapGettersToProps,
+      dispatch,
       nextState,
       nextOwnProps
     )

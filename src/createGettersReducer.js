@@ -1,9 +1,6 @@
 import { GETTER_STATUS_UPDATE } from './actions'
 
-const initialState = {
-  statuses: {},
-  errors: {},
-}
+const initialState = {}
 
 export default ({ dropOnAction = '' } = {}) => {
   return (state = initialState, action) => {
