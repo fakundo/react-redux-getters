@@ -1,9 +1,11 @@
+import isNil from 'lodash/isNil'
+
 let GETTER_INDEX = 0
 
 export default ({
   stateSelector,
   asyncFetcher,
-  shouldFetch = data => data === undefined,
+  shouldFetch = isNil,
   onSuccess = () => {},
   onFailure = () => {},
   serializeProps = props => JSON.stringify(props),
