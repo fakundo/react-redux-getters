@@ -13,6 +13,7 @@ const processGetter = (getter, dispatch, state) => {
     key,
     data,
     props,
+    additionalParams,
     error,
     status,
     shouldFetch,
@@ -22,31 +23,42 @@ const processGetter = (getter, dispatch, state) => {
   } = getter
 
   // Should we fetch data
-  if (!status && shouldFetch(data, state)) {
+  const isShouldFetch = shouldFetch(data, state, props, ...additionalParams)
+
+  // Start fetch
+  if (!status && isShouldFetch) {
     // Update getter status
     dispatch(setStatusPending(key))
     // Fetch data
-    asyncFetcher(dispatch, state, props)
+    asyncFetcher(dispatch, state, props, ...additionalParams)
       // Fetch succeded
       .then((fetchedData) => {
         // Update getter status
         dispatch(setStatusSucceded(key, (actualState) => {
-          onSuccess(dispatch, actualState, props, fetchedData)
+          onSuccess(fetchedData, dispatch, actualState, props, ...additionalParams)
         }))
       })
       // Fetch failed
       .catch((fetchError) => {
         // Update getter status
         dispatch(setStatusFailed(key, fetchError, (actualState) => {
-          onFailure(dispatch, actualState, props, fetchError)
+          onFailure(fetchError, dispatch, actualState, props, ...additionalParams)
         }))
       })
   }
 
+  // Create result status
+  let resultStatus = status
+  if (!shouldFetch) {
+    resultStatus = SUCCEDED
+  } else if (!status) {
+    resultStatus = PENDING
+  }
+
   // Specify statuses
-  const isPending = !status || status === PENDING
-  const isSucceded = status === SUCCEDED
-  const isFailed = status === FAILED
+  const isPending = resultStatus === PENDING
+  const isSucceded = resultStatus === SUCCEDED
+  const isFailed = resultStatus === FAILED
 
   // Create result object
   return {

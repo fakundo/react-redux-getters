@@ -23,3 +23,5 @@ export const updateSubjectsNew = subjects => ({
   type: UPDATE_SUBJECTS_NEW,
   subjects
 })
+
+window.updateSubjects = updateSubjects

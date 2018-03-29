@@ -11,9 +11,9 @@ export default ({
   serializeProps = props => JSON.stringify(props),
 }) => {
   const index = (GETTER_INDEX += 1, GETTER_INDEX)
-  return (state, props = {}) => {
+  return (state, props = {}, ...additionalParams) => {
     const key = `${index}${serializeProps(props)}`
-    const data = stateSelector(state)
+    const data = stateSelector(state, props, ...additionalParams)
     const statusState = state.getters[key]
     const status = statusState && statusState.status
     const error = statusState && statusState.error
@@ -22,6 +22,7 @@ export default ({
       key,
       data,
       props,
+      additionalParams,
       error,
       status,
       shouldFetch,
