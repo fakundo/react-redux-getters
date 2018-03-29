@@ -49,7 +49,7 @@ const processGetter = (getter, dispatch, state) => {
 
   // Create result status
   let resultStatus = status
-  if (!shouldFetch) {
+  if (!isShouldFetch) {
     resultStatus = SUCCEDED
   } else if (!status) {
     resultStatus = PENDING

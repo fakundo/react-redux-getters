@@ -4,5 +4,5 @@ import { updateTeachers, fetchTeachers } from '../actions/teachers'
 export const getTeachers = createGetter({
   stateSelector: state => state.teachers.collection,
   asyncFetcher: dispatch => dispatch(fetchTeachers()),
-  onSuccess: (dispatch, state, props, data) => dispatch(updateTeachers(data)),
+  onSuccess: (data, dispatch) => dispatch(updateTeachers(data)),
 })
