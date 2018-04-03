@@ -99,8 +99,9 @@ const processGetterComposition = (composition, dispatch, state) => {
   }
 }
 
-const processMapGettersToProps = (mapGettersToProps, dispatch, state, ownProps) => {
-  const getters = mapGettersToProps(state, ownProps)
+// const processMapGettersToProps = (getters, dispatch, state, ownProps) => {
+const processMapGettersToProps = (getters, dispatch, state) => {
+  // const getters = mapGettersToProps(state, ownProps)
   return mapValues(
     getters,
     getter => processGetterComposition(composeGetters(getter, data => data), dispatch, state)
@@ -116,14 +117,30 @@ const isResultChanged = (result, nextResult) => {
   return some(result, (value, key) => !isShallowEqual(value, nextResult[key]))
 }
 
+// @todo Need a refactor ASAP
 const createPureSelectorFactory = mapGettersToProps => (dispatch) => {
   let result = {}
   let ownProps = {}
   let props = {}
+  let realMapGettersToProps
 
   return (nextState, nextOwnProps) => {
+    let getters
+
+    if (realMapGettersToProps) {
+      getters = realMapGettersToProps(nextState, nextOwnProps)
+    } else {
+      getters = mapGettersToProps(nextState, nextOwnProps)
+      if (typeof getters === 'function') {
+        realMapGettersToProps = getters
+        getters = getters(nextState, nextOwnProps)
+      } else {
+        realMapGettersToProps = mapGettersToProps
+      }
+    }
+
     const nextResult = processMapGettersToProps(
-      mapGettersToProps,
+      getters,
       dispatch,
       nextState,
       nextOwnProps
@@ -142,10 +159,26 @@ const createPureSelectorFactory = mapGettersToProps => (dispatch) => {
   }
 }
 
+// @todo Need a refactor
 const createImpureSelectorFactory = mapGettersToProps => (dispatch) => {
+  let realMapGettersToProps
   return (nextState, nextOwnProps) => {
+    let getters
+
+    if (realMapGettersToProps) {
+      getters = realMapGettersToProps(nextState, nextOwnProps)
+    } else {
+      getters = mapGettersToProps(nextState, nextOwnProps)
+      if (typeof getters === 'function') {
+        realMapGettersToProps = getters
+        getters = getters(nextState, nextOwnProps)
+      } else {
+        realMapGettersToProps = mapGettersToProps
+      }
+    }
+
     return processMapGettersToProps(
-      mapGettersToProps,
+      getters,
       dispatch,
       nextState,
       nextOwnProps
