@@ -92,10 +92,25 @@ const processGetterComposition = (composition, dispatch, state) => {
     return firstFailedResult
   }
 
+  // Compose data
+  let composedData
+  try {
+    composedData = composeData(...results.map(result => result.data))
+  } catch (error) {
+    // Fail in data composition, so return failed status
+    return {
+      data: undefined,
+      error,
+      isPending: false,
+      isSucceded: false,
+      isFailed: true,
+    }
+  }
+
   // Every getter is succeded so compose their data
   return {
     ...results[0],
-    data: composeData(...results.map(result => result.data)),
+    data: composedData
   }
 }
 
