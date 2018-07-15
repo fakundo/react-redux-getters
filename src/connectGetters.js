@@ -1,208 +1,125 @@
 import { connectAdvanced } from 'react-redux'
 import find from 'lodash/find'
+import isFunction from 'lodash/isFunction'
 import some from 'lodash/some'
-import size from 'lodash/size'
 import mapValues from 'lodash/mapValues'
 import isShallowEqual from 'shallowequal'
-import { PENDING, SUCCEDED, FAILED } from './statuses'
-import { setStatusPending, setStatusSucceded, setStatusFailed } from './actions'
-import composeGetters, { GetterComposition } from './composeGetters'
+import { FAILED } from './statuses'
+import { replaceGetter, getterFetchCallback } from './actions'
+import { GetterComposition } from './composeGetters'
+import createGetterState from './createGetterState'
 
-const processGetter = (getter, dispatch, state) => {
-  const {
-    key,
-    data,
-    props,
-    additionalParams,
-    error,
-    status,
-    shouldFetch,
-    asyncFetcher,
-    onSuccess,
-    onFailure,
-  } = getter
-
-  // Should we fetch data
-  const isShouldFetch = shouldFetch(data, state, props, ...additionalParams)
-
-  // Start fetch
-  if (!status && isShouldFetch) {
-    // Update getter status
-    dispatch(setStatusPending(key))
-    // Fetch data
-    asyncFetcher(dispatch, state, props, ...additionalParams)
-      // Fetch succeded
-      .then((fetchedData) => {
-        // Update getter status
-        dispatch(setStatusSucceded(key, (actualState) => {
-          onSuccess(fetchedData, dispatch, actualState, props, ...additionalParams)
-        }))
-      })
-      // Fetch failed
-      .catch((fetchError) => {
-        // Update getter status
-        dispatch(setStatusFailed(key, fetchError, (actualState) => {
-          onFailure(fetchError, dispatch, actualState, props, ...additionalParams)
-        }))
-      })
-  }
-
-  // Create result status
-  let resultStatus = status
-  if (!isShouldFetch) {
-    resultStatus = SUCCEDED
-  } else if (!status) {
-    resultStatus = PENDING
-  }
-
-  // Specify statuses
-  const isPending = resultStatus === PENDING
-  const isSucceded = resultStatus === SUCCEDED
-  const isFailed = resultStatus === FAILED
-
-  // Create result object
-  return {
-    data: isSucceded ? data : undefined,
-    error: isFailed ? error : undefined,
-    isPending,
-    isSucceded,
-    isFailed,
-  }
+const isResultEqual = (result, nextResult = {}) => {
+  return !some(result, (value, key) => !isShallowEqual(value, nextResult[key]))
 }
 
-const processGetterComposition = (composition, dispatch, state) => {
+const processGetter = (state, dispatch, getter) => {
+  const { key, props, shouldFetch, asyncFetcher, stateUpdater } = getter
+
+  // Fetching
+  if (shouldFetch) {
+    delete getter.shouldFetch // eslint-disable-line
+
+    asyncFetcher(dispatch, state, props)
+      .then(fetchResult => dispatch(getterFetchCallback(
+        key,
+        actualState => stateUpdater(fetchResult, dispatch, actualState, props)
+      )))
+      .catch(error => dispatch(getterFetchCallback(
+        key,
+        (actualState, actualGetter) => dispatch(replaceGetter(createGetterState({
+          ...actualGetter,
+          status: FAILED,
+          error
+        })))
+      )))
+  }
+
+  // Return result object
+  return getter.result
+}
+
+const processGetterComposition = (state, dispatch, composition) => {
   const { getters, composeData } = composition
+  const processGetterOrComposition = makeProcessGetterOrComposition(state, dispatch) // eslint-disable-line
 
   // Process each getter in composition
-  const results = getters.map(getter => (
-    getter instanceof GetterComposition ?
-      processGetterComposition(getter, dispatch, state) :
-      processGetter(getter, dispatch, state)
-  ))
+  const results = getters.map(processGetterOrComposition)
 
-  // Check if some of getters is pending
-  const firstPendingResult = find(results, 'isPending')
-  if (firstPendingResult) {
-    return firstPendingResult
-  }
+  // Check if some of getters are pending
+  const pendingResult = find(results, 'isPending')
+  if (pendingResult) return pendingResult
 
-  // Check if some of getters is failed
-  const firstFailedResult = find(results, 'isFailed')
-  if (firstFailedResult) {
-    return firstFailedResult
-  }
+  // Check if some of getters are failed
+  const failedResult = find(results, 'isFailed')
+  if (failedResult) return failedResult
 
-  // Compose data
-  let composedData
-  try {
-    composedData = composeData(...results.map(result => result.data))
-  } catch (error) {
-    // Fail in data composition, so return failed status
-    return {
-      data: undefined,
-      error,
-      isPending: false,
-      isSucceded: false,
-      isFailed: true,
-    }
-  }
+  // Find new result data
+  const composedData = composeData(...results.map(result => result.data))
 
-  // Every getter is succeded so compose their data
-  return {
-    ...results[0],
-    data: composedData
-  }
+  // Return new data with statuses taken from first getter in composition
+  // Because every getter is succeded here
+  return { ...results[0], data: composedData }
 }
 
-// const processMapGettersToProps = (getters, dispatch, state, ownProps) => {
-const processMapGettersToProps = (getters, dispatch, state) => {
-  // const getters = mapGettersToProps(state, ownProps)
-  return mapValues(
-    getters,
-    getter => processGetterComposition(composeGetters(getter, data => data), dispatch, state)
-  )
+const makeProcessGetterOrComposition = (state, dispatch) => (getter) => {
+  const processFunc = getter instanceof GetterComposition ?
+    processGetterComposition :
+    processGetter
+  return processFunc(state, dispatch, getter)
 }
 
-const isResultChanged = (result, nextResult) => {
-  // Compare objects length
-  if (size(result) !== size(nextResult)) {
-    return true
-  }
-  // Shallow equal each value
-  return some(result, (value, key) => !isShallowEqual(value, nextResult[key]))
-}
-
-// @todo Need a refactor ASAP
-const createPureSelectorFactory = mapGettersToProps => (dispatch) => {
-  let result = {}
-  let ownProps = {}
-  let props = {}
+const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
   let realMapGettersToProps
+  let ownProps
+  let allProps
+  let getters
+  let result
 
   return (nextState, nextOwnProps) => {
-    let getters
+    let nextGetters
 
+    // Find real mapGettersToProps and save it in upper scope
+    // Useful when you want to create component with own reselect selector
     if (realMapGettersToProps) {
-      getters = realMapGettersToProps(nextState, nextOwnProps)
+      nextGetters = realMapGettersToProps(nextState, nextOwnProps)
     } else {
-      getters = mapGettersToProps(nextState, nextOwnProps)
-      if (typeof getters === 'function') {
-        realMapGettersToProps = getters
-        getters = getters(nextState, nextOwnProps)
+      nextGetters = mapGettersToProps(nextState, nextOwnProps)
+      if (isFunction(nextGetters)) {
+        realMapGettersToProps = nextGetters
+        nextGetters = realMapGettersToProps(nextState, nextOwnProps)
       } else {
         realMapGettersToProps = mapGettersToProps
       }
     }
 
-    const nextResult = processMapGettersToProps(
-      getters,
-      dispatch,
-      nextState,
-      nextOwnProps
-    )
-
-    const resultChanged = isResultChanged(result, nextResult)
+    const gettersChanged = !isShallowEqual(getters, nextGetters)
     const ownPropsChanged = !isShallowEqual(ownProps, nextOwnProps)
+    let resultChanged = false
 
-    if (ownPropsChanged || resultChanged) {
-      result = nextResult
+    // Getters changed, recalculate result
+    if (gettersChanged) {
+      getters = nextGetters
+      const processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatch)
+      const nextResult = mapValues(nextGetters, processGetterOrComposition)
+      resultChanged = !isResultEqual(nextResult, result)
+      if (resultChanged) result = nextResult
+    }
+
+    // Own props changed, memoize new own props
+    if (ownPropsChanged) {
       ownProps = nextOwnProps
-      props = { ...nextResult, ...nextOwnProps }
     }
 
-    return props
+    // Result or own props changed, memoize all props
+    if (resultChanged || ownPropsChanged) {
+      allProps = { ...result, ...ownProps }
+    }
+
+    return allProps
   }
 }
 
-// @todo Need a refactor
-const createImpureSelectorFactory = mapGettersToProps => (dispatch) => {
-  let realMapGettersToProps
-  return (nextState, nextOwnProps) => {
-    let getters
-
-    if (realMapGettersToProps) {
-      getters = realMapGettersToProps(nextState, nextOwnProps)
-    } else {
-      getters = mapGettersToProps(nextState, nextOwnProps)
-      if (typeof getters === 'function') {
-        realMapGettersToProps = getters
-        getters = getters(nextState, nextOwnProps)
-      } else {
-        realMapGettersToProps = mapGettersToProps
-      }
-    }
-
-    return processMapGettersToProps(
-      getters,
-      dispatch,
-      nextState,
-      nextOwnProps
-    )
-  }
+export default (mapGettersToProps, options) => {
+  return connectAdvanced(createSelectorFactory, { ...options, mapGettersToProps })
 }
-
-export default (mapGettersToProps, { pure = true, ...rest } = {}) => (
-  pure ?
-    connectAdvanced(createPureSelectorFactory(mapGettersToProps), rest) :
-    connectAdvanced(createImpureSelectorFactory(mapGettersToProps), rest)
-)

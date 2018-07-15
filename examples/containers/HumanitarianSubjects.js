@@ -7,6 +7,7 @@ import { getHumanitarianSubjects } from '../selectors/subjects'
 }))
 export default class HumanitarianSubjects extends Component {
   render() {
+    console.log('Render: HumanitarianSubjects')
     return (<pre>{ JSON.stringify(this.props, null, ' ') }</pre>)
   }
 }

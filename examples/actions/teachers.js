@@ -6,7 +6,7 @@ export const fetchTeachers = () => () =>
         2: { id: 2, name: 'Aria Stark' },
         3: { id: 3, name: 'Jaime Lannister' },
       })
-    }, Math.random() * 500)
+    }, (Math.random() * 5000) + 5000)
   }))
 
 export const UPDATE_TEACHERS = 'UPDATE_TEACHERS'

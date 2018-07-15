@@ -3,7 +3,7 @@ import { Provider as StoreProvider } from 'react-redux'
 import configureStore from './configureStore'
 import AllSubjects from './containers/AllSubjects'
 import HumanitarianSubjects from './containers/HumanitarianSubjects'
-import Composed from './containers/Composed'
+import SubjectTeachers from './containers/SubjectTeachers'
 
 const store = configureStore()
 
@@ -17,7 +17,7 @@ export default () => (
       <HumanitarianSubjects />
       <hr />
       <h5>Getters Composition</h5>
-      <Composed />
+      <SubjectTeachers />
       <hr />
     </div>
   </StoreProvider>

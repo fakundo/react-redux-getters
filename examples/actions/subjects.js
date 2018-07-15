@@ -1,5 +1,5 @@
 export const fetchSubjects = () => () =>
-  (new Promise((resolve) => {
+  (new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve({
         1: { id: 1, name: 'Math' },
@@ -7,7 +7,7 @@ export const fetchSubjects = () => () =>
         3: { id: 3, name: 'English' },
         4: { id: 4, name: 'Philosophy' }
       })
-    }, Math.random() * 500)
+    }, Math.random() * 5000)
   }))
 
 export const UPDATE_SUBJECTS = 'UPDATE_SUBJECTS'

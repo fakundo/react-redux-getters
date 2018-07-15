@@ -6,7 +6,6 @@ const port = 3000
 
 module.exports = {
   entry: [
-    'babel-polyfill',
     `webpack-dev-server/client?http://${host}:${port}`,
     path.resolve(__dirname, 'examples/index'),
   ],

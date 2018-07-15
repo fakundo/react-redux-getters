@@ -9,7 +9,7 @@ const isHumanitarianSubject = subject => includes(['Philosophy', 'English'], sub
 export const getAllSubjects = createGetter({
   stateSelector: state => state.subjects.collection,
   asyncFetcher: dispatch => dispatch(fetchSubjects()),
-  onSuccess: (data, dispatch) => dispatch(updateSubjects(data)),
+  stateUpdater: (data, dispatch) => dispatch(updateSubjects(data)),
 })
 
 export const getHumanitarianSubjects = createSelector(

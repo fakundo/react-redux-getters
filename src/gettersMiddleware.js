@@ -1,29 +1,12 @@
-// function createThunkMiddleware(extraArgument) {
-//   return ({ dispatch, getState }) => next => action => {
-//     if (typeof action === 'function') {
-//       return action(dispatch, getState, extraArgument);
-//     }
-
-//     return next(action);
-//   };
-// }
-
-// const thunk = createThunkMiddleware();
-// thunk.withExtraArgument = createThunkMiddleware;
-import includes from 'lodash/includes'
-import { GETTER_STATUS_UPDATE } from './actions'
-import { PENDING, SUCCEDED, FAILED } from './statuses'
+import { GETTER_FETCH_CALLBACK } from './actions'
 
 export default ({ getState }) => next => (action) => {
-  const { type, status, callback } = action
-  if (type === GETTER_STATUS_UPDATE && includes([SUCCEDED, FAILED], status)) {
+  const { type, key, callback } = action
+  if (type === GETTER_FETCH_CALLBACK) {
     const state = getState()
-    const statusState = state.getters[action.key]
-    const currentStatus = statusState && statusState.status
-    if (currentStatus !== PENDING) {
-      return action
-    }
-    callback(state)
+    const { getters } = state
+    if (getters[key]) callback(state, getters[key])
+    return action
   }
   return next(action)
 }
