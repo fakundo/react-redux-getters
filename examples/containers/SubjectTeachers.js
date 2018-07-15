@@ -7,7 +7,7 @@ import { getSubjectsAndTeachers } from '../selectors/subjectTeachers'
 }))
 export default class SubjectTeachers extends Component {
   render() {
-    console.log('Render: Composed - subjects & teachers')
+    console.log('Render: Composed - subjects & teachers') // eslint-disable-line
     return (<pre>{ JSON.stringify(this.props, null, ' ') }</pre>)
   }
 }

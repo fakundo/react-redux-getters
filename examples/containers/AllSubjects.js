@@ -7,7 +7,7 @@ import { getAllSubjects } from '../selectors/subjects'
 }))
 export default class AllSubjects extends Component {
   render() {
-    console.log('Render: AllSubjects')
+    console.log('Render: AllSubjects') // eslint-disable-line
     return (<pre>{ JSON.stringify(this.props, null, ' ') }</pre>)
   }
 }

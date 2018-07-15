@@ -1,5 +1,5 @@
 export const fetchSubjects = () => () =>
-  (new Promise((resolve, reject) => {
+  (new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         1: { id: 1, name: 'Math' },
