@@ -113,7 +113,7 @@ const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
 
     // Result or own props changed, memoize all props
     if (resultChanged || ownPropsChanged) {
-      allProps = { ...result, ...ownProps }
+      allProps = { ...ownProps, ...result }
     }
 
     return allProps
