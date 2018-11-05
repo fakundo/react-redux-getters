@@ -5,4 +5,6 @@ export class GetterComposition {
   }
 }
 
-export default (...args) => (new GetterComposition(...args))
+export default (...args) => (
+  new GetterComposition(...args)
+)

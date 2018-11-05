@@ -2,46 +2,98 @@ import { connectAdvanced } from 'react-redux'
 import find from 'lodash/find'
 import isFunction from 'lodash/isFunction'
 import some from 'lodash/some'
+import isObject from 'lodash/isObject'
 import mapValues from 'lodash/mapValues'
 import isShallowEqual from 'shallowequal'
-import { FAILED } from './statuses'
-import { replaceGetter, getterFetchCallback } from './actions'
+import { FAILED, DEFAULT, FETCHING, SHOULD_FETCH } from './statuses'
+import { getterFetchCallback } from './actions'
 import { GetterComposition } from './composeGetters'
-import createGetterState from './createGetterState'
 
-const isResultEqual = (result, nextResult = {}) => {
-  return !some(result, (value, key) => !isShallowEqual(value, nextResult[key]))
-}
+const makePendingResult = () => ({
+  isPending: true,
+  isSucceded: false,
+  isFailed: false,
+})
 
-const processGetter = (state, dispatch, getter) => {
-  const { key, props, shouldFetch, asyncFetcher, stateUpdater } = getter
+const makeSuccededResult = data => ({
+  data,
+  isPending: false,
+  isSucceded: true,
+  isFailed: false,
+})
 
-  // Fetching
-  if (shouldFetch) {
-    delete getter.shouldFetch // eslint-disable-line
+const makeFailedResult = error => ({
+  error,
+  isPending: false,
+  isSucceded: false,
+  isFailed: true
+})
 
-    asyncFetcher(dispatch, state, props)
-      .then(fetchResult => dispatch(getterFetchCallback(
-        key,
-        actualState => stateUpdater(fetchResult, dispatch, actualState, props)
-      )))
-      .catch(error => dispatch(getterFetchCallback(
-        key,
-        (actualState, actualGetter) => dispatch(replaceGetter(createGetterState({
-          ...actualGetter,
-          status: FAILED,
-          error
-        })))
-      )))
+const isResultEqual = (result, nextResult = {}) => (
+  !some(result, (value, key) => (
+    !isShallowEqual(value, nextResult[key])
+  ))
+)
+
+const isGetter = getter => (
+  isObject(getter) && '_getter' in getter
+)
+
+const processGetter = (state, dispatcher, getter) => {
+  if (isGetter(getter)) {
+    const { dispatch, canDispatch } = dispatcher
+    const { _getter: { status, stateUpdater, asyncFetcher, props, error, stateSelector } } = getter
+
+    if (status === FAILED) {
+      return makeFailedResult(error)
+    }
+
+    if (canDispatch) {
+      const updateGetter = (nextData, actualState) => {
+        const { _getter } = getter
+        const nextGetter = { _getter: { ..._getter, ...nextData } }
+        stateUpdater(nextGetter, dispatch, actualState, props)
+      }
+
+      if (status === DEFAULT) {
+        updateGetter({ status: SHOULD_FETCH })
+      }
+
+      if (status === SHOULD_FETCH) {
+        updateGetter({ status: FETCHING })
+
+        const isFetching = (actualState) => {
+          const stateData = stateSelector(actualState, props)
+          return isGetter(stateData) && stateData._getter.status === FETCHING
+        }
+
+        asyncFetcher(dispatch, state, props)
+          .then(fetchResult => (
+            dispatch(getterFetchCallback((actualState) => {
+              if (isFetching(actualState)) {
+                stateUpdater(fetchResult, dispatch, actualState, props)
+              }
+            }))
+          ))
+          .catch(fetchError => (
+            dispatch(getterFetchCallback((actualState) => {
+              if (isFetching(actualState)) {
+                updateGetter({ status: FAILED, error: fetchError })
+              }
+            }))
+          ))
+      }
+    }
+
+    return makePendingResult()
   }
 
-  // Return result object
-  return getter.result
+  return makeSuccededResult(getter)
 }
 
-const processGetterComposition = (state, dispatch, composition) => {
+const processGetterComposition = (state, dispatcher, composition) => {
   const { getters, composeData } = composition
-  const processGetterOrComposition = makeProcessGetterOrComposition(state, dispatch) // eslint-disable-line
+  const processGetterOrComposition = makeProcessGetterOrComposition(state, dispatcher) // eslint-disable-line
 
   // Process each getter in composition
   const results = getters.map(processGetterOrComposition)
@@ -62,11 +114,24 @@ const processGetterComposition = (state, dispatch, composition) => {
   return { ...results[0], data: composedData }
 }
 
-const makeProcessGetterOrComposition = (state, dispatch) => (getter) => {
-  const processFunc = getter instanceof GetterComposition ?
-    processGetterComposition :
-    processGetter
-  return processFunc(state, dispatch, getter)
+const makeProcessGetterOrComposition = (state, dispatcher) => {
+  return (getter) => {
+    const processFunc = getter instanceof GetterComposition
+      ? processGetterComposition
+      : processGetter
+    return processFunc(state, dispatcher, getter)
+  }
+}
+
+const makeDispatcher = (dispatch) => {
+  const dispatcher = ({
+    canDispatch: true,
+    dispatch: (...args) => {
+      dispatcher.canDispatch = false
+      return dispatch(...args)
+    },
+  })
+  return dispatcher
 }
 
 const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
@@ -100,10 +165,13 @@ const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
     // Getters changed, recalculate result
     if (gettersChanged) {
       getters = nextGetters
-      const processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatch)
+      const dispatcher = makeDispatcher(dispatch)
+      const processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatcher)
       const nextResult = mapValues(nextGetters, processGetterOrComposition)
       resultChanged = !isResultEqual(nextResult, result)
-      if (resultChanged) result = nextResult
+      if (resultChanged) {
+        result = nextResult
+      }
     }
 
     // Own props changed, memoize new own props

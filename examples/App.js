@@ -11,7 +11,7 @@ export default () => (
   <StoreProvider store={store}>
     <div>
       <h5>All Subjects</h5>
-      <AllSubjects />
+      <AllSubjects foo="bar" />
       <hr />
       <h5>Humanitarian Subjects</h5>
       <HumanitarianSubjects />
