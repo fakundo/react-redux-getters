@@ -1,13 +1,9 @@
 {
   "presets": [
-    ["env", { "modules": false }],
-    "react"
+    "@babel/preset-env",
+    "@babel/preset-react"
   ],
   "plugins": [
-    "transform-decorators-legacy",
-    "transform-object-rest-spread",
-    "transform-export-extensions",
-    "transform-class-properties",
-    "transform-runtime"
+    "@babel/plugin-transform-runtime"
   ]
 }

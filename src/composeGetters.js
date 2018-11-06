@@ -1,4 +1,4 @@
-export class GetterComposition {
+class GetterComposition {
   constructor(...args) {
     this.composeData = args.pop()
     this.getters = args

@@ -4,10 +4,12 @@ import isFunction from 'lodash/isFunction'
 import some from 'lodash/some'
 import isObject from 'lodash/isObject'
 import mapValues from 'lodash/mapValues'
+import uniqueId from 'lodash/uniqueId'
 import isShallowEqual from 'shallowequal'
-import { FAILED, DEFAULT, FETCHING, SHOULD_FETCH } from './statuses'
+import { FAILED, DEFAULT, FETCHING } from './statuses'
 import { getterFetchCallback } from './actions'
 import { GetterComposition } from './composeGetters'
+import isGetter from './isGetter'
 
 const makePendingResult = () => ({
   isPending: true,
@@ -35,60 +37,56 @@ const isResultEqual = (result, nextResult = {}) => (
   ))
 )
 
-const isGetter = getter => (
-  isObject(getter) && '_getter' in getter
-)
-
 const processGetter = (state, dispatcher, getter) => {
-  if (isGetter(getter)) {
-    const { dispatch, canDispatch } = dispatcher
-    const { _getter: { status, stateUpdater, asyncFetcher, props, error, stateSelector } } = getter
-
-    if (status === FAILED) {
-      return makeFailedResult(error)
-    }
-
-    if (canDispatch) {
-      const updateGetter = (nextData, actualState) => {
-        const { _getter } = getter
-        const nextGetter = { _getter: { ..._getter, ...nextData } }
-        stateUpdater(nextGetter, dispatch, actualState, props)
-      }
-
-      if (status === DEFAULT) {
-        updateGetter({ status: SHOULD_FETCH })
-      }
-
-      if (status === SHOULD_FETCH) {
-        updateGetter({ status: FETCHING })
-
-        const isFetching = (actualState) => {
-          const stateData = stateSelector(actualState, props)
-          return isGetter(stateData) && stateData._getter.status === FETCHING
-        }
-
-        asyncFetcher(dispatch, state, props)
-          .then(fetchResult => (
-            dispatch(getterFetchCallback((actualState) => {
-              if (isFetching(actualState)) {
-                stateUpdater(fetchResult, dispatch, actualState, props)
-              }
-            }))
-          ))
-          .catch(fetchError => (
-            dispatch(getterFetchCallback((actualState) => {
-              if (isFetching(actualState)) {
-                updateGetter({ status: FAILED, error: fetchError })
-              }
-            }))
-          ))
-      }
-    }
-
-    return makePendingResult()
+  if (!isGetter(getter)) {
+    return makeSuccededResult(getter)
   }
 
-  return makeSuccededResult(getter)
+  const { dispatch, canDispatch } = dispatcher
+  const { _getter: { status, stateUpdater, asyncFetcher, props, error, stateSelector } } = getter
+
+  if (status === FAILED) {
+    return makeFailedResult(error)
+  }
+
+  if (canDispatch) {
+    const updateGetter = (nextData, actualState) => {
+      const { _getter } = getter
+      const nextGetter = { _getter: { ..._getter, ...nextData } }
+      stateUpdater(nextGetter, dispatch, actualState, props)
+    }
+
+    if (status === DEFAULT) {
+      const key = uniqueId('react-redux-getters-')
+
+      updateGetter({ status: FETCHING, key })
+
+      const isFetching = (actualState) => {
+        const stateData = stateSelector(actualState, props)
+        return isGetter(stateData)
+          && stateData._getter.status === FETCHING
+          && stateData._getter.key === key
+      }
+
+      asyncFetcher(dispatch, state, props)
+        .then(fetchResult => (
+          dispatch(getterFetchCallback((actualState) => {
+            if (isFetching(actualState)) {
+              stateUpdater(fetchResult, dispatch, actualState, props)
+            }
+          }))
+        ))
+        .catch(fetchError => (
+          dispatch(getterFetchCallback((actualState) => {
+            if (isFetching(actualState)) {
+              updateGetter({ status: FAILED, error: fetchError, key: null })
+            }
+          }))
+        ))
+    }
+  }
+
+  return makePendingResult()
 }
 
 const processGetterComposition = (state, dispatcher, composition) => {

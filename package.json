@@ -7,10 +7,10 @@
     "lib"
   ],
   "scripts": {
-    "dev": "webpack-dev-server --progress --open",
+    "dev": "webpack-dev-server --progress --open --mode development",
     "lint": "eslint src && eslint examples",
     "build": "rimraf lib && babel src -d lib",
-    "prepublishOnly": "yarn run lint && yarn run build"
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
     "react",
@@ -32,36 +32,10 @@
   "author": "Roman Samoylov (https://github.com/fakundo)",
   "license": "ISC",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^10.0.1",
-    "babel-loader": "^8.0.4",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
-    "babel-plugin-transform-export-extensions": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-react": "^6.24.1",
-    "eslint": "^5.8.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.2",
-    "eslint-plugin-react": "^7.11.1",
-    "html-webpack-plugin": "^3.2.0",
-    "prop-types": "^15.6.0",
-    "react": "^16.0.0",
-    "react-dom": "^16.0.0",
-    "redux": "^3.7.2",
-    "redux-logger": "^3.0.6",
-    "redux-thunk": "^2.2.0",
-    "reselect": "^3.0.1",
-    "rimraf": "^2.6.2",
-    "webpack": "^4.24.0",
-    "webpack-dev-server": "^3.1.10"
+    "react": "^16.6.0",
+    "redux": "^4.0.1"
   },
   "dependencies": {
-    "babel-runtime": "^6.26.0",
     "lodash": "^4.17.4",
     "react-redux": "^5.0.6",
     "shallowequal": "^1.0.2"

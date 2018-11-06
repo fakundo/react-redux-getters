@@ -1,4 +1,6 @@
-export createGetter from './createGetter'
-export connectGetters from './connectGetters'
-export composeGetters from './composeGetters'
-export gettersMiddleware from './gettersMiddleware'
+import createGetter from './createGetter'
+import connectGetters from './connectGetters'
+import composeGetters from './composeGetters'
+import gettersMiddleware from './gettersMiddleware'
+
+export { createGetter, connectGetters, composeGetters, gettersMiddleware }

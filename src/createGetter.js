@@ -1,31 +1,33 @@
 import isNil from 'lodash/isNil'
 import { DEFAULT } from './statuses'
+import isGetter from './isGetter'
 
-const requiredProperty = property => (
-  console && console.warn(`[react-redux-getters]: Required property ${property} not provided`) // eslint-disable-line
+const requiredProperty = property => () => (
+  console && console.warn(`[react-redux-getters]: Required property ${property}`) // eslint-disable-line
 )
 
 export default ({
-  stateSelector = () => requiredProperty('stateSelector'),
-  asyncFetcher = () => requiredProperty('asyncFetcher'),
-  stateUpdater = () => requiredProperty('stateUpdater'),
+  stateSelector = requiredProperty('stateSelector'),
+  asyncFetcher = requiredProperty('asyncFetcher'),
+  stateUpdater = requiredProperty('stateUpdater'),
   shouldFetch = isNil,
 }) => (state, props = {}) => {
   const stateData = stateSelector(state, props)
 
-  if (shouldFetch(stateData, state, props)) {
-    return {
-      _getter: {
-        stateSelector,
-        asyncFetcher,
-        stateUpdater,
-        props,
-        error: null,
-        result: null,
-        status: DEFAULT,
-      }
-    }
+  if (isGetter(stateData) || !shouldFetch(stateData, state, props)) {
+    return stateData
   }
 
-  return stateData
+  return {
+    _getter: {
+      stateSelector,
+      asyncFetcher,
+      stateUpdater,
+      props,
+      status: DEFAULT,
+      error: null,
+      result: null,
+      key: null,
+    }
+  }
 }
