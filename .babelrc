@@ -4,6 +4,14 @@
     "@babel/preset-react"
   ],
   "plugins": [
-    "@babel/plugin-transform-runtime"
-  ]
+    "@babel/plugin-transform-runtime",
+    "@babel/plugin-proposal-export-default-from"
+  ],
+  "env": {
+    "commonjs": {
+      "plugins": [
+        ["@babel/plugin-transform-modules-commonjs", { "loose": true }]
+      ]
+    }
+  }
 }

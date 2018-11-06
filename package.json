@@ -1,6 +1,6 @@
 {
-  "name": "react-redux-getters",
-  "version": "1.1.0",
+  "name": "redux-getters",
+  "version": "2.0.0",
   "description": "",
   "main": "lib/index.js",
   "files": [
@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "webpack-dev-server --progress --open --mode development",
     "lint": "eslint src && eslint examples",
-    "build": "rimraf lib && babel src -d lib",
+    "compile": "NODE_ENV=commonjs babel src -d lib",
+    "clean": "rimraf lib",
+    "build": "npm run clean && npm run compile",
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
@@ -30,12 +32,35 @@
     "url": "https://github.com/fakundo/redux-getters"
   },
   "author": "Roman Samoylov (https://github.com/fakundo)",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-export-default-from": "^7.0.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.1.0",
+    "@babel/plugin-transform-runtime": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-eslint": "^10.0.1",
+    "babel-loader": "^8.0.4",
+    "eslint": "^5.8.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.11.1",
+    "html-webpack-plugin": "^3.2.0",
     "react": "^16.6.0",
-    "redux": "^4.0.1"
+    "react-dom": "^16.6.0",
+    "redux": "^4.0.1",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.3.0",
+    "reselect": "^4.0.0",
+    "webpack": "^4.25.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
   },
   "dependencies": {
+    "@babel/runtime": "^7.1.2",
     "lodash": "^4.17.4",
     "react-redux": "^5.0.6",
     "shallowequal": "^1.0.2"
