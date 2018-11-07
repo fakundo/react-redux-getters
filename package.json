@@ -1,5 +1,5 @@
 {
-  "name": "redux-getters",
+  "name": "react-redux-getters",
   "version": "3.0.0",
   "description": "",
   "main": "lib/index.js",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fakundo/redux-getters"
+    "url": "https://github.com/fakundo/react-redux-getters"
   },
   "author": "Roman Samoylov (https://github.com/fakundo)",
   "license": "MIT",
