@@ -1,6 +1,6 @@
 {
   "name": "react-redux-getters",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "",
   "main": "lib/index.js",
   "files": [
@@ -44,7 +44,7 @@
     "@babel/preset-react": "^7.0.0",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.4",
-    "eslint": "^5.8.0",
+    "eslint": "^5.10.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.2",
@@ -62,8 +62,8 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.2.0",
-    "lodash": "^4.17.4",
-    "react-redux": "^5.0.6",
-    "shallowequal": "^1.0.2"
+    "lodash": "^4.17.11",
+    "react-redux": "^5.0.0||^6.0.0",
+    "shallowequal": "^1.1.0"
   }
 }
