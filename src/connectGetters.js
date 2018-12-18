@@ -1,7 +1,6 @@
 import { connectAdvanced } from 'react-redux'
 import find from 'lodash/find'
 import isFunction from 'lodash/isFunction'
-import some from 'lodash/some'
 import mapValues from 'lodash/mapValues'
 import uniqueId from 'lodash/uniqueId'
 import isShallowEqual from 'shallowequal'
@@ -29,12 +28,6 @@ const makeFailedResult = error => ({
   isSucceded: false,
   isFailed: true
 })
-
-const isResultEqual = (result, nextResult = {}) => (
-  !some(result, (value, key) => (
-    !isShallowEqual(value, nextResult[key])
-  ))
-)
 
 const processGetter = (state, dispatcher, getter) => {
   if (!isGetter(getter)) {
@@ -89,7 +82,12 @@ const processGetter = (state, dispatcher, getter) => {
 }
 
 const processGetterComposition = (state, dispatcher, composition) => {
-  const { getters, composeData } = composition
+  const { getters, composeData, calculated, calculatedResult } = composition
+
+  // Return already calculated result
+  if (calculated) return calculatedResult
+
+  // Create process function
   const processGetterOrComposition = makeProcessGetterOrComposition(state, dispatcher) // eslint-disable-line
 
   // Process each getter in composition
@@ -97,18 +95,25 @@ const processGetterComposition = (state, dispatcher, composition) => {
 
   // Check if some of getters are pending
   const pendingResult = find(results, 'isPending')
-  if (pendingResult) return pendingResult
+  if (pendingResult) {
+    composition.updateCalculatedResult(pendingResult)
+    return pendingResult
+  }
 
   // Check if some of getters are failed
   const failedResult = find(results, 'isFailed')
-  if (failedResult) return failedResult
+  if (failedResult) {
+    composition.updateCalculatedResult(failedResult)
+    return failedResult
+  }
 
   // Find new result data
   const composedData = composeData(...results.map(result => result.data))
 
-  // Return new data with statuses taken from first getter in composition
-  // Because every getter is succeded here
-  return { ...results[0], data: composedData }
+  // Return succeded result
+  const succededResult = makeSuccededResult(composedData)
+  composition.updateCalculatedResult(succededResult)
+  return succededResult
 }
 
 const makeProcessGetterOrComposition = (state, dispatcher) => {
@@ -155,21 +160,27 @@ const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
       }
     }
 
-    const gettersChanged = !isShallowEqual(getters, nextGetters)
     const ownPropsChanged = !isShallowEqual(ownProps, nextOwnProps)
     let resultChanged = false
+    let dispatcher
+    let processGetterOrComposition
 
-    // Getters changed, recalculate result
-    if (gettersChanged) {
-      getters = nextGetters
-      const dispatcher = makeDispatcher(dispatch)
-      const processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatcher)
-      const nextResult = mapValues(nextGetters, processGetterOrComposition)
-      resultChanged = !isResultEqual(nextResult, result)
-      if (resultChanged) {
-        result = nextResult
+    // Calculate new result
+    result = mapValues(nextGetters, (getter, key) => {
+      if (!getters || getter !== getters[key]) {
+        dispatcher = makeDispatcher(dispatch)
+        processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatcher)
+        const getterResult = processGetterOrComposition(getter)
+        if (!result || !isShallowEqual(getterResult, result[key])) {
+          resultChanged = true
+          return getterResult
+        }
       }
-    }
+      return result[key]
+    })
+
+    // Memoize getters
+    getters = nextGetters
 
     // Own props changed, memoize new own props
     if (ownPropsChanged) {
