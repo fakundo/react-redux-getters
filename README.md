@@ -1,50 +1,41 @@
-# README update required!
+# react-redux-getters
 
-### Fetch data and fill store automatically
+[![npm](https://img.shields.io/npm/v/react-redux-getters.svg?maxAge=2592000)](https://www.npmjs.com/package/react-redux-getters)
 
-This library provides an additional layer of getters between the store and components. The getter returns data from the store if they are there, otherwise it returns stub and invokes fetch action.
+Simple library that provides additional layer of 'getters' between your React components and Redux store.
+The getter returns data from the store, if it's there, otherwise it returns a stub and invokes fetch action.
+So the store is filled automatically.
 
-Getters themselves are stored in the state of the store for easy access to them. For example, for using within selectors.
-
-[![npm](https://img.shields.io/npm/v/redux-getters.svg?maxAge=2592000)](https://www.npmjs.com/package/redux-getters)
-
-### Installation
+## Installation
 ```
-yarn add redux-getters
+yarn add react-redux-getters
 ```
 
-### Usage
+## Usage
 
-#### Creating a getter
+#### Create getter
 
 ```javascript
-import { updateSubjects, fetchSubjects } from '../actions/subjects'
-import { createGetter } from 'redux-getters'
+import { createGetter } from 'react-redux-getters'
+import { updateSubjects, fetchSubjects } from 'actions/subjects'
 
-export const allSubjects = () => createGetter({
-  stateSelector: state => state.subjects.collection,
-  asyncFetcher: dispatch => dispatch(fetchSubjects()),
-  getUpdatingAction: data => updateSubjects(data)
+export const getSubjects = createGetter({
+  stateSelector: state => state.subjects,
+  asyncFetcher: () => fetchSubjects(),
+  stateUpdater: (data, dispatch) => dispatch(updateSubjects(data)),
 })
 ```
 
 #### Configure store
 
 ``` javascript
-import { createReducer as createGettersReducer } from 'redux-getters'
-import * as getters from './getters'
+import { createStore, applyMiddleware } from 'redux'
+import { gettersMiddleware } from 'react-redux-getters'
 
 const store = createStore(
-  combineReducers({
-    getters: createGettersReducer(() => store, getters)
-  })
+  reducers,
+  applyMiddleware(gettersMiddleware, ...),
 )
-```
-
-#### Using within selector
-
-```javascript
-export const getAllSubjects = state => state.getters.allSubjects()
 ```
 
 #### Component
@@ -52,46 +43,174 @@ export const getAllSubjects = state => state.getters.allSubjects()
 ```javascript
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { isPendingStub } from 'redux-getters'
-import { getAllSubjects } from '../selectors/subjects'
+import { connectGetters } from 'react-redux-getters'
+import { getSubjects } from 'selectors/subjects'
 
-const mapStateToProps = state => ({
-  allSubjects: getAllSubjects(state)
+const mapGettersToProps = state => ({
+  subjectsGetter: getSubjects(state),
 })
 
-@connect(mapStateToProps)
-export default class AllSubjects extends Component {
+@connectGetters(mapGettersToProps)
+export default class Subjects extends Component {
   static propTypes = {
-    allSubjects: PropTypes.object
+    subjectsGetter: PropTypes.object.isRequired
   }
 
   render() {
-    const { allSubjects } = this.props
-    return isPendingStub(allSubjects) ?
-      <span>Loading ...</span> :
-      <pre>{ JSON.stringify(allSubjects, null, ' ') }</pre>
+    const { subjectsGetter } = this.props
+    const { isSucceded, isPending, isFailure, error, data } = subjectsGetter
+    
+    if (isPending) {
+      return (
+        <LoadingRenderer />
+      )
+    }
+
+    if (isFailure) {
+      return (
+        <ErrorRenderer error={error} />
+      )
+    }
+
+    return (
+      <DataRenderer data={data} />
+    )
   }
 }
 ```
 
-### API
+#### Done! 
+
+You React component will be rerendered when getter fetches data and saves it in Redux store.
+
+## Usage with [reselect](https://github.com/reduxjs/reselect)
+
+#### Create selector with getter
 
 ```javascript
-createGetter({
-  stateSelector,
-  asyncFetcher,
-  getPendingAction,
-  getSuccessAction,
-  getFailureAction,
-  getUpdatingAction
-} = {})
+import { createSelector } from 'reselect'
+import { createGetter, composeGetters } from 'react-redux-getters'
+import { getSubjects } from 'selectors/subjects'
+import { getTeachers } from 'selectors/teachers'
 
-createGettersReducer(getStore, getters)
-
-isPendingStub(data)
-
-isFailureStub(data)
-
-isSuccededData(data)
+export const getHumanitarianSubjects = createSelector(
+  getSubjects,
+  subjectsGetter => composeGetters(
+    subjectsGetter,
+    subjects => filterHumanitarianSubjects(subjects)
+  )
+)
 ```
+
+#### Component (usage is the same as with a simple getter)
+
+```javascript
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { connectGetters } from 'react-redux-getters'
+import { getHumanitarianSubjects } from 'selectors/subjects'
+
+const mapGettersToProps = state => ({
+  humanitarianSubjectsGetter: getHumanitarianSubjects(state),
+})
+
+@connectGetters(mapGettersToProps)
+export default class HumanitarianSubjects extends Component {
+  static propTypes = {
+    humanitarianSubjectsGetter: PropTypes.object.isRequired
+  }
+
+  render() {
+    const { humanitarianSubjectsGetter } = this.props
+    const { isSucceded, isPending, isFailure, error, data } = humanitarianSubjectsGetter
+    ...
+  }
+}
+```
+
+## More examples
+
+#### Compose getters
+
+```javascript
+import { createSelector } from 'reselect'
+import { createGetter, composeGetters } from 'react-redux-getters'
+import { getSubjects } from 'selectors/subjects'
+import { getTeachers } from 'selectors/teachers'
+
+export const getSubjectsAndTeachers = createSelector(
+  getSubjects,
+  getTeachers,
+  (subjectsGetter, teachersGetter) => composeGetters(
+    subjectsGetter,
+    teachersGetter,
+    (subjects, teachers) => ({ subjects, teachers })
+  )
+)
+```
+
+#### Using props
+
+```javascript
+// Getter
+import { createGetter } from 'react-redux-getters'
+import { fetchTeacher, updateTeacher } from 'actions/teachers'
+
+export const getTeacher = createGetter({
+  stateSelector: (state, props) => state.teachers[props.teacherId],
+  asyncFetcher: (dispatch, state, props) => fetchTeacher(props.teacherId),
+  stateUpdater: (data, dispatch, state, props) => dispatch(updateTeacher(props.teacherId, data))
+})
+
+// Component
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { connectGetters } from 'react-redux-getters'
+import { getTeacher } from 'selectors/teachers'
+
+const mapGettersToProps = (state, props) => ({
+  teacherGetter: getTeacher(state, { teacherId: props.teacherId }),
+})
+
+@connectGetters(mapGettersToProps)
+export default class Teacher extends Component {
+  ...
+}
+
+// Using component
+<Teacher teacherId={1} />
+```
+
+#### Composing getters without reselect
+
+```javascript
+import { composeGetters } from 'react-redux-getters'
+import { getSubjects } from 'actions/subjects'
+
+export const getSubject = (state, props) => composeGetters(
+  getSubjects(state),
+  subjects => findSubjectById(subjects, props.subjectId)
+)
+```
+
+## API
+
+```javascript
+import { createGetter, composeGetters } from 'react-redux-getters'
+
+createGetter({
+  stateSelector: (state, props) => dataFromState, // Required func – should return data from store state
+  asyncFetcher: async (dispatch, state, props) => fetchedData, // Required async func – should return fetched data (Promise)
+  stateUpdater: (data, dispatch, state, props) => {}, // Required func - should dispatch store update
+  shouldFetch: (dataFromState, state, props) => isNil(dataFromState) // Optional func – condition that fetching is needed
+})
+
+composeGetters(
+  ...getters, 
+  composeData: (...gettersData) => newComposedData // Func – creates composed data from incoming getters data
+)
+```
+
+## License
+
+MIT

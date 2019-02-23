@@ -9,7 +9,7 @@ const mapGettersToProps = state => ({
 })
 
 const AllSubjects = (props) => {
-  console.log('Render: AllSubjects') // eslint-disable-line
+  console.log('Render: AllSubjects', props) // eslint-disable-line
   renderCount += 1
   return (
     <pre>

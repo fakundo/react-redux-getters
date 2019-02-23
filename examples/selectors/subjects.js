@@ -19,3 +19,8 @@ export const getHumanitarianSubjects = createSelector(
     allSubjects => pickBy(allSubjects, isHumanitarianSubject)
   )
 )
+
+export const getHumanitarianSubjects2 = state => composeGetters(
+  getAllSubjects(state),
+  allSubjects => pickBy(allSubjects, isHumanitarianSubject)
+)
