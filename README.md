@@ -50,8 +50,9 @@ const mapGettersToProps = state => ({
   subjectsGetter: getSubjects(state),
 })
 
+export default 
 @connectGetters(mapGettersToProps)
-export default class Subjects extends Component {
+class Subjects extends Component {
   static propTypes = {
     subjectsGetter: PropTypes.object.isRequired
   }
@@ -114,8 +115,9 @@ const mapGettersToProps = state => ({
   humanitarianSubjectsGetter: getHumanitarianSubjects(state),
 })
 
+export default 
 @connectGetters(mapGettersToProps)
-export default class HumanitarianSubjects extends Component {
+class HumanitarianSubjects extends Component {
   static propTypes = {
     humanitarianSubjectsGetter: PropTypes.object.isRequired
   }
@@ -172,8 +174,9 @@ const mapGettersToProps = (state, props) => ({
   teacherGetter: getTeacher(state, { teacherId: props.teacherId }),
 })
 
+export default
 @connectGetters(mapGettersToProps)
-export default class Teacher extends Component {
+class Teacher extends Component {
   ...
 }
 
