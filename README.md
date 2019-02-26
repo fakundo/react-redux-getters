@@ -1,6 +1,6 @@
 # react-redux-getters
 
-[![npm](https://img.shields.io/npm/v/react-redux-getters.svg?maxAge=2592000)](https://www.npmjs.com/package/react-redux-getters)
+[![npm](https://img.shields.io/npm/v/react-redux-getters.svg)](https://www.npmjs.com/package/react-redux-getters)
 
 Simple library that provides additional layer of 'getters' between your React components and Redux store.
 The getter returns data from the store, if it's there, otherwise it returns a stub and invokes fetch action.
