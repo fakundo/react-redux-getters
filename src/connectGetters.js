@@ -107,8 +107,18 @@ const processGetterComposition = (state, dispatcher, composition) => {
     return failedResult
   }
 
-  // Find new result data
-  const composedData = composeData(...results.map(result => result.data))
+  // Store result of the composition here
+  let composedData = null
+
+  try {
+    // Try to find new result of the composition
+    composedData = composeData(...results.map(result => result.data))
+  } catch (compositionError) {
+    // Error in composition function
+    const failedCompositionResult = makeFailedResult(compositionError)
+    composition.updateCalculatedResult(failedCompositionResult)
+    return failedCompositionResult
+  }
 
   // Return succeded result
   const succededResult = makeSuccededResult(composedData)
