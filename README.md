@@ -2,8 +2,8 @@
 
 [![npm](https://img.shields.io/npm/v/react-redux-getters.svg)](https://www.npmjs.com/package/react-redux-getters)
 
-Simple library that provides additional layer of 'getters' between your React components and Redux store.
-The getter returns data from the store, if it's there, otherwise it returns a stub and invokes fetch action.
+Provides an extra layer of 'getters' between your React components and the Redux store.
+The getter returns the data from the store, if it's there, otherwise it returns a stub and invokes the fetch action.
 So the store is filled automatically.
 
 ## Installation
@@ -15,7 +15,7 @@ yarn add react-redux-getters
 
 #### Create getter
 
-```javascript
+```js
 import { createGetter } from 'react-redux-getters'
 import { updateSubjects, fetchSubjects } from 'actions/subjects'
 
@@ -28,7 +28,7 @@ export const getSubjects = createGetter({
 
 #### Configure store
 
-``` javascript
+``` js
 import { createStore, applyMiddleware } from 'redux'
 import { gettersMiddleware } from 'react-redux-getters'
 
@@ -40,7 +40,7 @@ const store = createStore(
 
 #### Component
 
-```javascript
+```js
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connectGetters } from 'react-redux-getters'
@@ -82,13 +82,13 @@ class Subjects extends Component {
 
 #### Done! 
 
-You React component will be rerendered when getter fetches data and saves it in Redux store.
+Your React component will be rerendered when the getter fetches data and saves it in the Redux store.
 
 ## Usage with [reselect](https://github.com/reduxjs/reselect)
 
 #### Create selector with getter
 
-```javascript
+```js
 import { createSelector } from 'reselect'
 import { createGetter, composeGetters } from 'react-redux-getters'
 import { getSubjects } from 'selectors/subjects'
@@ -105,7 +105,7 @@ export const getHumanitarianSubjects = createSelector(
 
 #### Component (usage is the same as with a simple getter)
 
-```javascript
+```js
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connectGetters } from 'react-redux-getters'
@@ -134,7 +134,7 @@ class HumanitarianSubjects extends Component {
 
 #### Compose getters
 
-```javascript
+```js
 import { createSelector } from 'reselect'
 import { createGetter, composeGetters } from 'react-redux-getters'
 import { getSubjects } from 'selectors/subjects'
@@ -153,7 +153,7 @@ export const getSubjectsAndTeachers = createSelector(
 
 #### Using props
 
-```javascript
+```js
 // Getter
 import { createGetter } from 'react-redux-getters'
 import { fetchTeacher, updateTeacher } from 'actions/teachers'
@@ -186,7 +186,7 @@ class Teacher extends Component {
 
 #### Composing getters without reselect
 
-```javascript
+```js
 import { composeGetters } from 'react-redux-getters'
 import { getSubjects } from 'actions/subjects'
 
@@ -198,7 +198,7 @@ export const getSubject = (state, props) => composeGetters(
 
 ## API
 
-```javascript
+```js
 import { createGetter, composeGetters } from 'react-redux-getters'
 
 createGetter({
