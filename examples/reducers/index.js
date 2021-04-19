@@ -1,2 +1,2 @@
-export subjects from './subjects'
-export teachers from './teachers'
+export * from './subjects'
+export * from './teachers'

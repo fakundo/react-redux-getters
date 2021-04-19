@@ -1,18 +1,21 @@
 {
   "name": "react-redux-getters",
-  "version": "3.2.1",
+  "version": "4.0.0",
   "description": "Getters for React and Redux",
-  "main": "lib/index.js",
+  "main": "lib/react-redux-getters.js",
+  "module": "lib/react-redux-getters.module.js",
+  "exports": "./lib/react-redux-getters.modern.js",
   "files": [
     "lib"
   ],
   "scripts": {
-    "dev": "webpack-dev-server --progress --open --mode development",
+    "dev": "NODE_ENV=development webpack serve --config webpack.config.js",
     "lint": "eslint src && eslint examples",
-    "compile": "NODE_ENV=commonjs babel src -d lib",
+    "watch": "microbundle watch -i src -o lib -f modern,es,cjs --no-sourcemap",
+    "compile": "microbundle -i src -o lib -f modern,es,cjs --no-sourcemap",
     "clean": "rimraf lib",
-    "build": "npm run clean && npm run compile",
-    "prepublishOnly": "npm run lint && npm run build"
+    "build": "yarn run clean && yarn run compile",
+    "prepublishOnly": "yarn run lint && yarn run build"
   },
   "keywords": [
     "react",
@@ -34,37 +37,35 @@
   "author": "Roman Samoylov (https://github.com/fakundo)",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-proposal-class-properties": "^7.4.4",
-    "@babel/plugin-proposal-export-default-from": "^7.2.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
-    "@babel/plugin-transform-runtime": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "@babel/preset-react": "^7.0.0",
-    "babel-eslint": "^10.0.2",
-    "babel-loader": "^8.0.6",
-    "eslint": "^6.0.1",
-    "eslint-config-airbnb": "^17.1.1",
-    "eslint-plugin-import": "^2.18.0",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.14.2",
-    "html-webpack-plugin": "^3.2.0",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "@babel/cli": "^7.13.14",
+    "@babel/core": "^7.13.15",
+    "@babel/eslint-parser": "^7.13.14",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/plugin-transform-runtime": "^7.13.15",
+    "@babel/preset-env": "^7.13.15",
+    "@babel/preset-react": "^7.13.13",
+    "babel-loader": "^8.2.2",
+    "eslint": "^7.24.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.23.2",
+    "html-webpack-plugin": "^5.3.1",
+    "microbundle": "^0.13.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-redux": "^7.1.0",
-    "redux": "^4.0.1",
+    "redux": "^4.0.5",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
     "reselect": "^4.0.0",
-    "webpack": "^4.35.2",
-    "webpack-cli": "^3.3.5",
-    "webpack-dev-server": "^3.7.2"
+    "webpack": "^5.33.2",
+    "webpack-cli": "^4.6.0",
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
-    "shallowequal": "^1.1.0",
-    "@babel/runtime": "^7.4.5"
+    "shallowequal": "^1.0.0",
+    "lodash": "^4.0.0"
   },
   "peerDependencies": {
     "react-redux": "^5.0.0||^6.0.0||^7.0.0"

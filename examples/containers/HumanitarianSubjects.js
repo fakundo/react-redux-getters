@@ -4,8 +4,8 @@ import { getHumanitarianSubjects } from '../selectors/subjects'
 
 let renderCount = 0
 
-const mapGettersToProps = state => ({
-  humanitarianSubjects: getHumanitarianSubjects(state)
+const mapGettersToProps = (state) => ({
+  humanitarianSubjects: getHumanitarianSubjects(state),
 })
 
 const HumanitarianSubjects = (props) => {

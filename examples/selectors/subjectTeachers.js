@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect'
-import { composeGetters } from '../../src'
+import { composeGetters } from 'react-redux-getters'
 import { getTeachers } from './teachers'
 import { getAllSubjects } from './subjects'
 
@@ -11,7 +11,7 @@ export const getSubjectsAndTeachers = createSelector(
     teachers,
     (subjectsData, teachersData) => ({
       subjects: subjectsData,
-      teachers: teachersData
-    })
-  )
+      teachers: teachersData,
+    }),
+  ),
 )

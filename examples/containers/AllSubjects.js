@@ -4,7 +4,7 @@ import { getAllSubjects } from '../selectors/subjects'
 
 let renderCount = 0
 
-const mapGettersToProps = state => ({
+const mapGettersToProps = (state) => ({
   allSubjects: getAllSubjects(state),
 })
 

@@ -9,22 +9,26 @@ module.exports = {
     `webpack-dev-server/client?http://${host}:${port}`,
     path.resolve(__dirname, 'examples/index'),
   ],
-  devtool: 'inline-source-map',
   plugins: [
-    new HtmlWebpackPlugin()
+    new HtmlWebpackPlugin(),
   ],
   module: {
     rules: [
       {
         test: /\.jsx?$/,
         use: 'babel-loader',
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
+  },
+  resolve: {
+    alias: {
+      '@fakundo/react-redux-getters': path.resolve(__dirname),
+    },
   },
   devServer: {
     host,
     port,
-    stats: 'minimal'
-  }
+    stats: 'minimal',
+  },
 }

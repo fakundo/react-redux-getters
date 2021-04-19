@@ -12,6 +12,6 @@ export class GetterComposition {
   }
 }
 
-export default (...args) => (
+export const composeGetters = (...args) => (
   new GetterComposition(...args)
 )

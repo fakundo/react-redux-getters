@@ -1,12 +1,12 @@
 import isNil from 'lodash/isNil'
 import { DEFAULT } from './statuses'
-import isGetter from './isGetter'
+import { isGetter, GETTER_FIELD_NAME } from './isGetter'
 
-const requiredProperty = property => () => (
+const requiredProperty = (property) => () => (
   console && console.warn(`[react-redux-getters]: Required property ${property}`) // eslint-disable-line
 )
 
-export default ({
+export const createGetter = ({
   stateSelector = requiredProperty('stateSelector'),
   asyncFetcher = requiredProperty('asyncFetcher'),
   stateUpdater = requiredProperty('stateUpdater'),
@@ -19,7 +19,7 @@ export default ({
   }
 
   return {
-    _getter: {
+    [GETTER_FIELD_NAME]: {
       stateSelector,
       asyncFetcher,
       stateUpdater,
@@ -28,6 +28,6 @@ export default ({
       error: null,
       result: null,
       key: null,
-    }
+    },
   }
 }

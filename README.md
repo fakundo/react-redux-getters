@@ -6,12 +6,12 @@ Provides an extra layer of 'getters' between your React components and the Redux
 The getter returns the data from the store, if it's there, otherwise it returns a stub and invokes the fetch action.
 So the store is filled automatically.
 
-## Installation
+### Installation
 ```
 yarn add react-redux-getters
 ```
 
-## Usage
+### Usage
 
 #### Create getter
 
@@ -20,7 +20,7 @@ import { createGetter } from 'react-redux-getters'
 import { updateSubjects, fetchSubjects } from 'actions/subjects'
 
 export const getSubjects = createGetter({
-  stateSelector: state => state.subjects,
+  stateSelector: (state) => state.subjects,
   asyncFetcher: () => fetchSubjects(),
   stateUpdater: (data, dispatch) => dispatch(updateSubjects(data)),
 })
@@ -46,12 +46,6 @@ import PropTypes from 'prop-types'
 import { connectGetters } from 'react-redux-getters'
 import { getSubjects } from 'selectors/subjects'
 
-const mapGettersToProps = state => ({
-  subjectsGetter: getSubjects(state),
-})
-
-export default 
-@connectGetters(mapGettersToProps)
 class Subjects extends Component {
   static propTypes = {
     subjectsGetter: PropTypes.object.isRequired
@@ -78,13 +72,19 @@ class Subjects extends Component {
     )
   }
 }
+
+const mapGettersToProps = state => ({
+  subjectsGetter: getSubjects(state),
+})
+
+export default connectGetters(mapGettersToProps)(Subjects)
 ```
 
 #### Done! 
 
-Your React component will be rerendered when the getter fetches data and saves it in the Redux store.
+Your React component will be rerendered when the getter fetches the data and stores it in the Redux store.
 
-## Usage with [reselect](https://github.com/reduxjs/reselect)
+### Usage with [reselect](https://github.com/reduxjs/reselect)
 
 #### Create selector with getter
 
@@ -96,14 +96,14 @@ import { getTeachers } from 'selectors/teachers'
 
 export const getHumanitarianSubjects = createSelector(
   getSubjects,
-  subjectsGetter => composeGetters(
+  (subjectsGetter) => composeGetters(
     subjectsGetter,
     subjects => filterHumanitarianSubjects(subjects)
   )
 )
 ```
 
-#### Component (usage is the same as with a simple getter)
+#### Component (usage is the same as with a regular getter)
 
 ```js
 import React, { Component } from 'react'
@@ -111,12 +111,6 @@ import PropTypes from 'prop-types'
 import { connectGetters } from 'react-redux-getters'
 import { getHumanitarianSubjects } from 'selectors/subjects'
 
-const mapGettersToProps = state => ({
-  humanitarianSubjectsGetter: getHumanitarianSubjects(state),
-})
-
-export default 
-@connectGetters(mapGettersToProps)
 class HumanitarianSubjects extends Component {
   static propTypes = {
     humanitarianSubjectsGetter: PropTypes.object.isRequired
@@ -128,11 +122,17 @@ class HumanitarianSubjects extends Component {
     ...
   }
 }
+
+const mapGettersToProps = state => ({
+  humanitarianSubjectsGetter: getHumanitarianSubjects(state),
+})
+
+export default connectGetters(mapGettersToProps)(HumanitarianSubjects)
 ```
 
-## More examples
+### More examples
 
-#### Compose getters
+#### Composing getters
 
 ```js
 import { createSelector } from 'reselect'
@@ -170,15 +170,15 @@ import PropTypes from 'prop-types'
 import { connectGetters } from 'react-redux-getters'
 import { getTeacher } from 'selectors/teachers'
 
+class Teacher extends Component {
+  ...
+}
+
 const mapGettersToProps = (state, props) => ({
   teacherGetter: getTeacher(state, { teacherId: props.teacherId }),
 })
 
-export default
-@connectGetters(mapGettersToProps)
-class Teacher extends Component {
-  ...
-}
+export default connectGetters(mapGettersToProps)(Teacher)
 
 // Using component
 <Teacher teacherId={1} />
@@ -192,11 +192,11 @@ import { getSubjects } from 'actions/subjects'
 
 export const getSubject = (state, props) => composeGetters(
   getSubjects(state),
-  subjects => findSubjectById(subjects, props.subjectId)
+  (subjects) => findSubjectById(subjects, props.subjectId)
 )
 ```
 
-## API
+### API
 
 ```js
 import { createGetter, composeGetters } from 'react-redux-getters'
@@ -214,6 +214,6 @@ composeGetters(
 )
 ```
 
-## License
+### License
 
 MIT

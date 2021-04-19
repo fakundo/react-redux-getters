@@ -7,7 +7,7 @@ import isShallowEqual from 'shallowequal'
 import { FAILED, DEFAULT, FETCHING } from './statuses'
 import { getterFetchCallback } from './actions'
 import { GetterComposition } from './composeGetters'
-import isGetter from './isGetter'
+import { isGetter, GETTER_FIELD_NAME } from './isGetter'
 
 const makePendingResult = () => ({
   isPending: true,
@@ -15,18 +15,18 @@ const makePendingResult = () => ({
   isFailed: false,
 })
 
-const makeSuccededResult = data => ({
+const makeSuccededResult = (data) => ({
   data,
   isPending: false,
   isSucceded: true,
   isFailed: false,
 })
 
-const makeFailedResult = error => ({
+const makeFailedResult = (error) => ({
   error,
   isPending: false,
   isSucceded: false,
-  isFailed: true
+  isFailed: true,
 })
 
 const processGetter = (state, dispatcher, getter) => {
@@ -35,7 +35,9 @@ const processGetter = (state, dispatcher, getter) => {
   }
 
   const { dispatch, canDispatch } = dispatcher
-  const { _getter: { status, stateUpdater, asyncFetcher, props, error, stateSelector } } = getter
+  const { [GETTER_FIELD_NAME]: {
+    status, stateUpdater, asyncFetcher, props, error, stateSelector,
+  } } = getter
 
   if (status === FAILED) {
     return makeFailedResult(error)
@@ -43,8 +45,8 @@ const processGetter = (state, dispatcher, getter) => {
 
   if (canDispatch) {
     const updateGetter = (nextData, actualState) => {
-      const { _getter } = getter
-      const nextGetter = { _getter: { ..._getter, ...nextData } }
+      const { [GETTER_FIELD_NAME]: prevGetter } = getter
+      const nextGetter = { [GETTER_FIELD_NAME]: { ...prevGetter, ...nextData } }
       stateUpdater(nextGetter, dispatch, actualState, props)
     }
 
@@ -56,19 +58,19 @@ const processGetter = (state, dispatcher, getter) => {
       const isFetching = (actualState) => {
         const stateData = stateSelector(actualState, props)
         return isGetter(stateData)
-          && stateData._getter.status === FETCHING
-          && stateData._getter.key === key
+          && stateData[GETTER_FIELD_NAME].status === FETCHING
+          && stateData[GETTER_FIELD_NAME].key === key
       }
 
       asyncFetcher(dispatch, state, props)
-        .then(fetchResult => (
+        .then((fetchResult) => (
           dispatch(getterFetchCallback((actualState) => {
             if (isFetching(actualState)) {
               stateUpdater(fetchResult, dispatch, actualState, props)
             }
           }))
         ))
-        .catch(fetchError => (
+        .catch((fetchError) => (
           dispatch(getterFetchCallback((actualState) => {
             if (isFetching(actualState)) {
               updateGetter({ status: FAILED, error: fetchError, key: null })
@@ -112,7 +114,7 @@ const processGetterComposition = (state, dispatcher, composition) => {
 
   try {
     // Try to find new result of the composition
-    composedData = composeData(...results.map(result => result.data))
+    composedData = composeData(...results.map((result) => result.data))
   } catch (compositionError) {
     // Error in composition function
     const failedCompositionResult = makeFailedResult(compositionError)
@@ -126,14 +128,14 @@ const processGetterComposition = (state, dispatcher, composition) => {
   return succededResult
 }
 
-const makeProcessGetterOrComposition = (state, dispatcher) => {
-  return (getter) => {
+const makeProcessGetterOrComposition = (state, dispatcher) => (
+  (getter) => {
     const processFunc = getter instanceof GetterComposition
       ? processGetterComposition
       : processGetter
     return processFunc(state, dispatcher, getter)
   }
-}
+)
 
 const makeDispatcher = (dispatch) => {
   const dispatcher = ({
@@ -206,6 +208,6 @@ const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
   }
 }
 
-export default (mapGettersToProps, options) => {
-  return connectAdvanced(createSelectorFactory, { ...options, mapGettersToProps })
-}
+export const connectGetters = (mapGettersToProps, options) => (
+  connectAdvanced(createSelectorFactory, { ...options, mapGettersToProps })
+)

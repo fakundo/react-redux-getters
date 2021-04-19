@@ -7,7 +7,7 @@ import * as reducers from './reducers'
 export default () => {
   const logger = createLogger({ collapsed: true })
   const createReducer = () => combineReducers({
-    ...reducers
+    ...reducers,
   })
 
   const store = createStore(

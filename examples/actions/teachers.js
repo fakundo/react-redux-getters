@@ -12,7 +12,7 @@ export const fetchTeachers = () => () => (
 
 export const UPDATE_TEACHERS = 'UPDATE_TEACHERS'
 
-export const updateTeachers = teachers => ({
+export const updateTeachers = (teachers) => ({
   type: UPDATE_TEACHERS,
-  teachers
+  teachers,
 })
