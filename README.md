@@ -73,7 +73,7 @@ class Subjects extends Component {
   }
 }
 
-const mapGettersToProps = state => ({
+const mapGettersToProps = (state) => ({
   subjectsGetter: getSubjects(state),
 })
 
@@ -98,7 +98,7 @@ export const getHumanitarianSubjects = createSelector(
   getSubjects,
   (subjectsGetter) => composeGetters(
     subjectsGetter,
-    subjects => filterHumanitarianSubjects(subjects)
+    (subjects) => filterHumanitarianSubjects(subjects)
   )
 )
 ```
@@ -123,7 +123,7 @@ class HumanitarianSubjects extends Component {
   }
 }
 
-const mapGettersToProps = state => ({
+const mapGettersToProps = (state) => ({
   humanitarianSubjectsGetter: getHumanitarianSubjects(state),
 })
 
