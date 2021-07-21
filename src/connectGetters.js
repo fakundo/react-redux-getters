@@ -7,7 +7,9 @@ import isShallowEqual from 'shallowequal'
 import { FAILED, DEFAULT, FETCHING } from './statuses'
 import { getterFetchCallback } from './actions'
 import { GetterComposition } from './composeGetters'
-import { isGetter, GETTER_FIELD_NAME } from './isGetter'
+import { isGetter, GETTER_FIELD } from './isGetter'
+
+const CAN_DISPATCH_FIELD = '__canDispatch'
 
 const makePendingResult = () => ({
   isPending: true,
@@ -34,50 +36,51 @@ const processGetter = (state, dispatcher, getter) => {
     return makeSuccededResult(getter)
   }
 
-  const { dispatch, canDispatch } = dispatcher
-  const { [GETTER_FIELD_NAME]: {
-    status, stateUpdater, asyncFetcher, props, error, stateSelector,
-  } } = getter
+  const { dispatch, [CAN_DISPATCH_FIELD]: canDispatch } = dispatcher
+  const {
+    [GETTER_FIELD]: { status, stateUpdater, asyncFetcher, props, error, stateSelector },
+  } = getter
 
   if (status === FAILED) {
     return makeFailedResult(error)
   }
 
-  if (canDispatch) {
-    const updateGetter = (nextData, actualState) => {
-      const { [GETTER_FIELD_NAME]: prevGetter } = getter
-      const nextGetter = { [GETTER_FIELD_NAME]: { ...prevGetter, ...nextData } }
-      stateUpdater(nextGetter, dispatch, actualState, props)
+  if (canDispatch && status === DEFAULT) {
+    const updateState = (nextData, actualState) => {
+      stateUpdater(nextData, dispatch, actualState, props)
     }
 
-    if (status === DEFAULT) {
-      const key = uniqueId('react-redux-getters-')
-
-      updateGetter({ status: FETCHING, key })
-
-      const isFetching = (actualState) => {
-        const stateData = stateSelector(actualState, props)
-        return isGetter(stateData)
-          && stateData[GETTER_FIELD_NAME].status === FETCHING
-          && stateData[GETTER_FIELD_NAME].key === key
-      }
-
-      asyncFetcher(dispatch, state, props)
-        .then((fetchResult) => (
-          dispatch(getterFetchCallback((actualState) => {
-            if (isFetching(actualState)) {
-              stateUpdater(fetchResult, dispatch, actualState, props)
-            }
-          }))
-        ))
-        .catch((fetchError) => (
-          dispatch(getterFetchCallback((actualState) => {
-            if (isFetching(actualState)) {
-              updateGetter({ status: FAILED, error: fetchError, key: null })
-            }
-          }))
-        ))
+    const updateGetter = (nextGetterData, actualState) => {
+      const { [GETTER_FIELD]: prevGetter } = getter
+      const nextGetter = { [GETTER_FIELD]: { ...prevGetter, ...nextGetterData } }
+      updateState(nextGetter, actualState)
     }
+
+    const key = uniqueId('react-redux-getters-')
+    updateGetter({ status: FETCHING, key }, state)
+
+    const isFetching = (actualState) => {
+      const stateData = stateSelector(actualState, props)
+      return isGetter(stateData)
+        && stateData[GETTER_FIELD].status === FETCHING
+        && stateData[GETTER_FIELD].key === key
+    }
+
+    asyncFetcher(dispatch, state, props)
+      .then((fetchResult) => (
+        dispatch(getterFetchCallback((actualState) => {
+          if (isFetching(actualState)) {
+            updateState(fetchResult, actualState)
+          }
+        }))
+      ))
+      .catch((fetchError) => (
+        dispatch(getterFetchCallback((actualState) => {
+          if (isFetching(actualState)) {
+            updateGetter({ status: FAILED, error: fetchError, key: null }, actualState)
+          }
+        }))
+      ))
   }
 
   return makePendingResult()
@@ -87,7 +90,9 @@ const processGetterComposition = (state, dispatcher, composition) => {
   const { getters, composeData, calculated, calculatedResult } = composition
 
   // Return already calculated result
-  if (calculated) return calculatedResult
+  if (calculated) {
+    return calculatedResult
+  }
 
   // Create process function
   const processGetterOrComposition = makeProcessGetterOrComposition(state, dispatcher) // eslint-disable-line
@@ -139,9 +144,9 @@ const makeProcessGetterOrComposition = (state, dispatcher) => (
 
 const makeDispatcher = (dispatch) => {
   const dispatcher = ({
-    canDispatch: true,
+    [CAN_DISPATCH_FIELD]: true,
     dispatch: (...args) => {
-      dispatcher.canDispatch = false
+      dispatcher[CAN_DISPATCH_FIELD] = false
       return dispatch(...args)
     },
   })
@@ -173,15 +178,13 @@ const createSelectorFactory = (dispatch, { mapGettersToProps }) => {
     }
 
     const ownPropsChanged = !isShallowEqual(ownProps, nextOwnProps)
+    const dispatcher = makeDispatcher(dispatch)
+    const processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatcher)
     let resultChanged = false
-    let dispatcher
-    let processGetterOrComposition
 
     // Calculate new result
     result = mapValues(nextGetters, (getter, key) => {
       if (!getters || getter !== getters[key]) {
-        dispatcher = makeDispatcher(dispatch)
-        processGetterOrComposition = makeProcessGetterOrComposition(nextState, dispatcher)
         const getterResult = processGetterOrComposition(getter)
         if (!result || !isShallowEqual(getterResult, result[key])) {
           resultChanged = true

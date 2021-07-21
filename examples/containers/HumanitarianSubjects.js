@@ -1,5 +1,5 @@
 import React from 'react'
-import { connectGetters } from '../../src'
+import { connectGetters } from 'react-redux-getters'
 import { getHumanitarianSubjects } from '../selectors/subjects'
 
 let renderCount = 0
@@ -9,14 +9,14 @@ const mapGettersToProps = (state) => ({
 })
 
 const HumanitarianSubjects = (props) => {
-  console.log('Render: HumanitarianSubjects') // eslint-disable-line
+  // console.log('Render: HumanitarianSubjects') // eslint-disable-line
   renderCount += 1
   return (
     <pre>
-      { 'RenderCount: ' }
-      { renderCount }
-      { '\r\n' }
-      { JSON.stringify(props, null, ' ') }
+      {'RenderCount: '}
+      {renderCount}
+      {'\r\n'}
+      {JSON.stringify(props, null, ' ')}
     </pre>
   )
 }

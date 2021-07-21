@@ -1,5 +1,5 @@
 import React from 'react'
-import { connectGetters } from '../../src'
+import { connectGetters } from 'react-redux-getters'
 import { getTeachers } from '../selectors/teachers'
 
 let renderCount = 0
@@ -9,14 +9,14 @@ const mapGettersToProps = (state) => ({
 })
 
 const Teachers = (props) => {
-  console.log('Render: Teachers') // eslint-disable-line
+  // console.log('Render: Teachers') // eslint-disable-line
   renderCount += 1
   return (
     <pre>
-      { 'RenderCount: ' }
-      { renderCount }
-      { '\r\n' }
-      { JSON.stringify(props, null, ' ') }
+      {'RenderCount: '}
+      {renderCount}
+      {'\r\n'}
+      {JSON.stringify(props, null, ' ')}
     </pre>
   )
 }

@@ -23,7 +23,7 @@ module.exports = {
   },
   resolve: {
     alias: {
-      '@fakundo/react-redux-getters': path.resolve(__dirname),
+      'react-redux-getters': path.resolve(__dirname),
     },
   },
   devServer: {
