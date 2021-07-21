@@ -1,6 +1,6 @@
 {
   "name": "react-redux-getters",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Getters for React and Redux",
   "main": "lib/react-redux-getters.js",
   "module": "lib/react-redux-getters.module.js",
